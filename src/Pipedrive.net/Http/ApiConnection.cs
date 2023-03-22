@@ -547,7 +547,7 @@ namespace Pipedrive
             Ensure.ArgumentNotNull(uri, nameof(uri));
 
             var response = await Connection.Get<JsonResponse<List<T>>>(uri, parameters, accepts).ConfigureAwait(false);
-            return new ReadOnlyPagedCollection<T>(
+            return new ReadOnlyPagedCollection<T>(uri, new ApiOptions(){ PageSize = 100, StartPage = 0},
                 response,
                 nextPageUri => Connection.Get<JsonResponse<List<T>>>(nextPageUri, parameters, accepts));
         }
@@ -563,17 +563,11 @@ namespace Pipedrive
             var connection = Connection;
 
             var response = await connection.Get<JsonResponse<List<TU>>>(uri, parameters, accepts).ConfigureAwait(false);
-            return new ReadOnlyPagedCollection<TU>(
+            return new ReadOnlyPagedCollection<TU>(uri, options,
                 response,
                 nextPageUri =>
                 {
-                    var shouldContinue = Pagination.ShouldContinue(
-                        nextPageUri,
-                        options);
-
-                    return shouldContinue
-                        ? connection.Get<JsonResponse<List<TU>>>(nextPageUri, parameters, accepts)
-                        : null;
+                    return connection.Get<JsonResponse<List<TU>>>(nextPageUri, parameters, accepts);
                 });
         }
     }
